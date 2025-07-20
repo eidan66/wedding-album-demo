@@ -1,10 +1,12 @@
+// Uses APP_CONFIG for event branding and customization
 import React, { useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Heart, Camera, Upload } from "lucide-react";
+import { Heart, Camera, Upload, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Footer } from "./Footer";
 import { ShareFAB } from "./ui/ShareFAB";
+import { APP_CONFIG } from "@/config";
 
 interface LayoutProps {
   children?: React.ReactNode; // Make children optional
@@ -12,10 +14,18 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const [showDemoBanner, setShowDemoBanner] = React.useState(() => {
+    return sessionStorage.getItem('hideDemoBanner') !== 'true';
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  const handleCloseBanner = () => {
+    setShowDemoBanner(false);
+    sessionStorage.setItem('hideDemoBanner', 'true');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-gold-50" dir="rtl">
@@ -34,9 +44,9 @@ export default function Layout({ children }: LayoutProps) {
               </motion.div>
               <div className="flex-shrink-0 pl-1 mr-1">
                 <h1 className="text-xl font-bold from-emerald-700 to-gold-400 bg-clip-text text-emerald-700 text-center">
-                  ספיר & עידן
+                  {APP_CONFIG.eventName}
                 </h1>
-                <p className="text-sm text-gray-600 font-medium text-center">זכרונות מהחתונה שלנו</p>
+                <p className="text-sm text-gray-600 font-medium text-center">{APP_CONFIG.eventSubtitle}</p>
               </div>
             </Link>
             
@@ -68,6 +78,17 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </header>
+
+      {/* Demo Mode Banner */}
+      {showDemoBanner && (
+        <div className="w-full bg-emerald-600 text-white text-center py-3 px-4 flex items-center justify-center gap-4 z-40 relative">
+          <span className="font-semibold">מצב הדגמה:</span>
+          <span>התמונות והסרטונים נשמרים רק בדפדפן שלך. משתמשים אחרים לא יראו את הזכרונות שלך.</span>
+          <button onClick={handleCloseBanner} className="ml-2 p-1 rounded-full hover:bg-emerald-700 transition-colors" aria-label="סגור הודעה">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1">

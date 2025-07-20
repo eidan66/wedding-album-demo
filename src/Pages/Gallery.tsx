@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { WeddingMedia } from "@/Entities/WeddingMedia";
+import { useState, useEffect } from "react";
 import type { WeddingMediaItem } from "@/Entities/WeddingMedia";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Heart, Loader2 } from "lucide-react";
+import { Plus, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import MediaGrid from "../components/gallery/MediaGrid";
@@ -12,98 +11,33 @@ import MediaViewer from "../components/gallery/MediaViewer";
 import FilterTabs from "../components/gallery/FilterTabs";
 import GalleryHeader from "../components/gallery/GalleryHeader";
 import MediaSkeleton from "../components/gallery/MediaSkeleton";
+import { APP_CONFIG } from "@/config";
 
-const ITEMS_PER_PAGE = 20; // Define items per page
+const LOCAL_STORAGE_KEY = APP_CONFIG.localStorageKey;
 
 export const Gallery = () => {
   const [media, setMedia] = useState<WeddingMediaItem[]>([]);
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true); // Loading state for initial load
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // Loading state for infinite scroll
-  const [page, setPage] = useState(1); // Current page number
-  const [hasMore, setHasMore] = useState(true); // Flag to indicate if there are more items to load
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState<WeddingMediaItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "photo" | "video">("all");
   const [viewerIndex, setViewerIndex] = useState(0);
 
-  const loader = useRef(null); // Ref for the loading indicator element
+  // Load all media from localStorage on mount
+  useEffect(() => {
+    setIsLoading(true);
+    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const items: WeddingMediaItem[] = data ? JSON.parse(data) : [];
+    setMedia(items);
+    setIsLoading(false);
+  }, []);
 
-  // Function to fetch media with pagination
-  const fetchMedia = async (pageToLoad: number) => {
-    if (pageToLoad === 1) {
-      setIsLoadingInitial(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    
-    try {
-      // Pass page and limit to the list function
-      const data = await WeddingMedia.list("-created_date", pageToLoad, ITEMS_PER_PAGE);
-      
-      const mappedMedia: WeddingMediaItem[] = data.items.map(item => ({
-        id: item.id,
-        media_url: item.url,
-        media_type: item.type === 'image' ? 'photo' : 'video',
-        title: item.title || '',
-        uploader_name: item.uploader_name || 'אורח אנונימי',
-        created_date: item.created_date || new Date().toISOString(),
-        thumbnail_url: item.thumbnail_url,
-      }));
-      
-      if (pageToLoad === 1) {
-        setMedia(mappedMedia);
-      } else {
-        setMedia(prevMedia => [...prevMedia, ...mappedMedia]);
-      }
-
-      // Determine if there are more items based on the total items and current page/limit
-      setHasMore(media.length + mappedMedia.length < (data.total_items ?? 0));
-      setPage(pageToLoad);
-
-    } catch (error) {
-      console.error("Error loading media:", error);
-      // Optionally set an error state to display to the user
-      setHasMore(false); // Stop trying to load more on error
-    }
-    
-    setIsLoadingInitial(false);
-    setIsLoadingMore(false);
+  // Clear gallery handler
+  const handleClearGallery = () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    setMedia([]);
   };
 
-  // Initial load
-  useEffect(() => {
-    fetchMedia(1);
-  }, []); // Empty dependency array means this runs once on mount
-
-  // Infinite scrolling logic
-  useEffect(() => {
-    const options = {
-      root: null, // Use the viewport as the root
-      rootMargin: "20px", // Load when the loader is within 20px of the viewport
-      threshold: 1.0 // Trigger when 100% of the loader is visible
-    };
-
-    const observer = new IntersectionObserver((entities) => {
-      const target = entities[0];
-      // Check if target exists and is intersecting
-      if (target && target.isIntersecting && hasMore && !isLoadingInitial && !isLoadingMore) {
-        fetchMedia(page + 1);
-      }
-    }, options);
-
-    // Start observing the loader element
-    if (loader.current) {
-      observer.observe(loader.current);
-    }
-
-    // Clean up the observer on component unmount
-    return () => {
-      if (loader.current) {
-        observer.unobserve(loader.current);
-      }
-    };
-  }, [hasMore, isLoadingInitial, isLoadingMore, page]); // Re-run effect if these dependencies change
-
-  // Filtering logic remains the same, but it now filters the accumulating 'media' state
+  // Filtering logic
   const filteredMedia = media.filter(item => {
     if (activeFilter === "all") return true;
     return item.media_type === activeFilter;
@@ -123,7 +57,6 @@ export const Gallery = () => {
     const newIndex = direction === "next" 
       ? (viewerIndex + 1) % filteredMedia.length
       : (viewerIndex - 1 + filteredMedia.length) % filteredMedia.length;
-    
     const newMedia = filteredMedia[newIndex];
     if (newMedia) {
       setViewerIndex(newIndex);
@@ -145,17 +78,24 @@ export const Gallery = () => {
             media={media}
           />
           
-          <Link to={createPageUrl("Upload")}>
-            <Button className="hidden sm:inline-flex bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
-              <Plus className="w-4 h-4 ml-2 group-hover:rotate-90 transition-transform duration-300" />
-              שתפו את הזיכרון שלכם
-            </Button>
-          </Link>
+          <div className="flex gap-2 items-center">
+            <Link to={createPageUrl("Upload")}> 
+              <Button className="hidden sm:inline-flex bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
+                <Plus className="w-4 h-4 ml-2 group-hover:rotate-90 transition-transform duration-300" />
+                שתפו את הזיכרון שלכם
+              </Button>
+            </Link>
+            {media.length > 0 && (
+              <Button onClick={handleClearGallery} className="bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 ml-2">
+                נקה גלריה
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Media Grid */}
         <AnimatePresence mode="wait">
-          {isLoadingInitial ? (
+          {isLoading ? (
             <MediaSkeleton />
           ) : filteredMedia.length > 0 ? (
             <MediaGrid 
@@ -177,7 +117,7 @@ export const Gallery = () => {
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
                 היו הראשונים לשתף זיכרון יפה מהיום המיוחד הזה!
               </p>
-              <Link to={createPageUrl("Upload")}>
+              <Link to={createPageUrl("Upload")}> 
                 <Button className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white">
                   שתפו את הזיכרון הראשון
                 </Button>
@@ -186,28 +126,18 @@ export const Gallery = () => {
           )}
         </AnimatePresence>
 
-        {/* Loading indicator for infinite scroll */}
-        {isLoadingMore && (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-          </div>
-        )}
-
-        {/* Element to observe for infinite scrolling */}
-        {hasMore && !isLoadingInitial && !isLoadingMore && filteredMedia.length > 0 && (
-          <div ref={loader} className="h-1"></div> // Small, invisible element at the bottom
-        )}
-
         {/* Media Viewer Modal */}
-        <MediaViewer
-          media={selectedMedia}
-          isOpen={!!selectedMedia}
-          onClose={closeViewer}
-          onNavigate={navigateViewer}
-          currentIndex={viewerIndex}
-          totalCount={filteredMedia.length}
-        />
+        {selectedMedia && (
+          <MediaViewer
+            media={selectedMedia}
+            isOpen={!!selectedMedia}
+            onClose={closeViewer}
+            onNavigate={navigateViewer}
+            currentIndex={viewerIndex}
+            totalCount={filteredMedia.length}
+          />
+        )}
       </div>
     </div>
   );
-}
+};

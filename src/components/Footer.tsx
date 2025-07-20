@@ -3,7 +3,7 @@ import React from 'react';
 export const Footer: React.FC = () => (
   <footer className="wedding-gradient border-t border-gold-200 text-center py-8 text-gray-700">
     <p className="text-sm font-medium">
-      האתר נבנה באהבה על ידי{' '}
+      האתר נבנה ועוצב באהבה על ידי{' '}
       <a
         href="https://idanlevian.com"
         target="_blank"

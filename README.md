@@ -74,4 +74,41 @@ We support a single theme called `sageTheme` (inspired by cream & sage tones).
 
 ---
 
+## 🧪 Demo Mode (LocalStorage)
+
+This project is currently in **Demo Mode**:
+- All uploaded photos and videos are stored **only in your browser** (localStorage).
+- Each user sees only their own uploads.
+- No backend or server is required for the demo.
+
+### Clearing the Gallery
+To clear all uploaded media for your browser:
+- Click the "נקה גלריה" (Clear Gallery) button above the gallery.
+- Or, clear your browser's localStorage for this site.
+
+---
+
+## 📝 Using as a Template
+
+Want to use this for another event?
+- Clone or fork this repo.
+- Update the branding, logo, and event details in `src/components/Layout.tsx` and `public/` assets.
+- (Optional) Add backend integration for shared galleries.
+- Deploy to Vercel, Netlify, or your favorite static host.
+
+---
+
+## 📄 License
+
+Copyright (c) 2025 Idan Levian
+
+All rights reserved.
+
+This software and its source code are the exclusive property of Idan Levian.
+You may not use, copy, modify, distribute, or host this software or any derivative works without explicit written permission and a valid commercial license.
+
+For licensing inquiries, please contact: [your email or website]
+
+---
+
 ## ❤️ Created by [Idan Levian](https://idanlevian.com)

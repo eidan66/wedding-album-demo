@@ -2,15 +2,17 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { Gallery } from './Pages/Gallery';
 import Upload from './Pages/Upload';
+import NotFound from './Pages/NotFound';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/wedding-album/" element={<Layout />}>
-          <Route index element={<Navigate to="/wedding-album/gallery" replace />} />
-          <Route path="/wedding-album/gallery" element={<Gallery />} />
-          <Route path="/wedding-album/upload" element={<Upload />} />
+        <Route element={<Layout />}>
+          <Route index element={<Navigate to="/gallery" replace />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/upload" element={<Upload />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

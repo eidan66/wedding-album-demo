@@ -6,9 +6,8 @@ import vercel from 'vite-plugin-vercel';
 import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
-  base: '/wedding-album/',
+  base: '/', // <-- this should be '/' for root deployment
   plugins: [react(),svgr(), tailwindcss(), vercel({
-    basePath: '/wedding-album',
     includeFiles: true,
   }),
 ],
