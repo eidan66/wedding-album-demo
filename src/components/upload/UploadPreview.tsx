@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { X, Image, Video, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRef, useEffect } from "react";
 
 interface UploadPreviewProps {
   files: File[];
@@ -30,6 +31,14 @@ export default function UploadPreview({ files, onRemove }: UploadPreviewProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const firstItemRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (files.length > 0) {
+      firstItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [files]);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {files.map((file, index) => {
@@ -43,6 +52,7 @@ export default function UploadPreview({ files, onRemove }: UploadPreviewProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             className="relative group"
+            ref={index === 0 ? firstItemRef : undefined}
           >
             <div className="bg-white rounded-2xl border-2 border-gold-200 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
               {/* Preview */}
