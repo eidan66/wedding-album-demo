@@ -1,7 +1,7 @@
 // Uses APP_CONFIG for easy customization
 import { useState } from 'react';
 import type { WeddingMediaItem } from '../Entities/WeddingMedia';
-import { APP_CONFIG } from '@/config';
+import { saveMediaItem } from '@/lib/indexedDbMedia';
 
 export type UploadStatus = 'pending' | 'uploading' | 'success' | 'error';
 
@@ -11,17 +11,6 @@ export interface FileUploadState {
   progress: number;
   error?: string;
   mediaItem?: WeddingMediaItem;
-}
-
-const LOCAL_STORAGE_KEY = APP_CONFIG.localStorageKey;
-
-function getLocalMedia(): WeddingMediaItem[] {
-  const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
-}
-
-function saveLocalMedia(items: WeddingMediaItem[]) {
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -62,9 +51,8 @@ export const useBulkUploader = () => {
           uploader_name: uploaderName || 'אורח אנונימי',
           created_date: now,
         };
-        // Save to localStorage
-        const current = getLocalMedia();
-        saveLocalMedia([newMedia, ...current]);
+        // Save to IndexedDB
+        await saveMediaItem(newMedia);
         setUploads(prev =>
           prev.map((u, i) =>
             i === idx ? { ...u, status: 'success' as UploadStatus, progress: 100, mediaItem: newMedia } : u
@@ -81,7 +69,7 @@ export const useBulkUploader = () => {
   };
 
   const cancelUploads = () => {
-    // No-op for localStorage, but kept for API compatibility
+    // No-op for IndexedDB, but kept for API compatibility
   };
 
   return { uploads, uploadFiles, cancelUploads };

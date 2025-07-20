@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { WeddingMediaItem } from "@/Entities/WeddingMedia";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -11,9 +11,7 @@ import MediaViewer from "../components/gallery/MediaViewer";
 import FilterTabs from "../components/gallery/FilterTabs";
 import GalleryHeader from "../components/gallery/GalleryHeader";
 import MediaSkeleton from "../components/gallery/MediaSkeleton";
-import { APP_CONFIG } from "@/config";
-
-const LOCAL_STORAGE_KEY = APP_CONFIG.localStorageKey;
+import { getAllMediaItems, clearAllMediaItems } from "@/lib/indexedDbMedia";
 
 export const Gallery = () => {
   const [media, setMedia] = useState<WeddingMediaItem[]>([]);
@@ -21,19 +19,27 @@ export const Gallery = () => {
   const [selectedMedia, setSelectedMedia] = useState<WeddingMediaItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "photo" | "video">("all");
   const [viewerIndex, setViewerIndex] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  // Load all media from localStorage on mount
+  // Load all media from IndexedDB on mount
   useEffect(() => {
     setIsLoading(true);
-    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    const items: WeddingMediaItem[] = data ? JSON.parse(data) : [];
-    setMedia(items);
-    setIsLoading(false);
+    getAllMediaItems().then(items => {
+      setMedia(items);
+      setIsLoading(false);
+    });
+    // Scroll to gallery grid if coming from upload
+    if (sessionStorage.getItem('scrollToGallery') === 'true') {
+      setTimeout(() => {
+        gridRef.current?.scrollIntoView({ behavior: 'smooth' });
+        sessionStorage.removeItem('scrollToGallery');
+      }, 300);
+    }
   }, []);
 
   // Clear gallery handler
-  const handleClearGallery = () => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  const handleClearGallery = async () => {
+    await clearAllMediaItems();
     setMedia([]);
   };
 
@@ -98,10 +104,12 @@ export const Gallery = () => {
           {isLoading ? (
             <MediaSkeleton />
           ) : filteredMedia.length > 0 ? (
-            <MediaGrid 
-              media={filteredMedia} 
-              onMediaClick={openViewer}
-            />
+            <div ref={gridRef}>
+              <MediaGrid 
+                media={filteredMedia} 
+                onMediaClick={openViewer}
+              />
+            </div>
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

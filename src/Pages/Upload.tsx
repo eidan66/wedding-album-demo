@@ -64,6 +64,7 @@ export default function Upload() {
         setUploaderName(""); // Reset uploader name
         setCaption(""); // Reset caption
         setShowSuccess(false);
+        sessionStorage.setItem('scrollToGallery', 'true');
         navigate(createPageUrl("Gallery")); // Navigate to gallery after success
       }, 4500);
     }

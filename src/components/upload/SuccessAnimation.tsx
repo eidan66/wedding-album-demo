@@ -70,6 +70,9 @@ export default function SuccessAnimation() {
         <p className="text-gray-600 text-lg max-w-md mx-auto">
           תודה רבה שבאתם לרגש אותנו ביום המיוחד הזה! הזיכרונות שלכם עושים לנו את היום! ❤️
         </p>
+        <p className="text-emerald-700 text-base font-semibold mt-2">
+          האתר יחזור לעמוד גלריה לבד בעוד מספר שניות.
+        </p>
         
         <motion.div
           initial={{ scale: 0 }}
